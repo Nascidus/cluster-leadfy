@@ -5,11 +5,17 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Request;
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('ga4.dashboard');
 });
 
-Route::get('/ga4/dashboard', [\App\Http\Controllers\Ga4DashboardController::class, 'index'])
-    ->name('ga4.dashboard');
+Route::get('/login', [\App\Http\Controllers\LoginController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [\App\Http\Controllers\LoginController::class, 'login'])->name('login.post');
+Route::post('/logout', [\App\Http\Controllers\LoginController::class, 'logout'])->name('logout');
+
+Route::middleware('dashboard.auth')->group(function () {
+    Route::get('/ga4/dashboard', [\App\Http\Controllers\Ga4DashboardController::class, 'index'])
+        ->name('ga4.dashboard');
+});
 
 Route::get('/debug/metabase-clients', function (
     \App\Services\Ga4ApiService $ga4,
