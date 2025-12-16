@@ -34,6 +34,28 @@ class Ga4ApiService
     }
 
     /**
+     * Gera o DateRange para os relatórios.
+     *
+     * Regra:
+     * - Se $days === 1  => somente ontem (start = yesterday, end = yesterday)
+     * - Caso contrário => mesmo comportamento anterior (N dias até hoje)
+     */
+    protected function makeDateRange(int $days): DateRange
+    {
+        if ($days === 1) {
+            return new DateRange([
+                'start_date' => 'yesterday',
+                'end_date' => 'yesterday',
+            ]);
+        }
+
+        return new DateRange([
+            'start_date' => sprintf('%ddaysAgo', $days),
+            'end_date' => 'today',
+        ]);
+    }
+
+    /**
      * Filtro geral: somente usuários cujo user property \"profile\" contém \"Cliente\".
      *
      * Usa o API name da dimensão de usuário: customUser:profile.
@@ -66,10 +88,7 @@ class Ga4ApiService
                 new Metric(['name' => 'eventCount']),
             ])
             ->setDateRanges([
-                new DateRange([
-                    'start_date' => sprintf('%ddaysAgo', $days),
-                    'end_date' => 'today',
-                ]),
+                $this->makeDateRange($days),
             ]);
 
         // Considera apenas eventos de interesse
@@ -120,10 +139,7 @@ class Ga4ApiService
                 new Metric(['name' => 'totalUsers']),
             ])
             ->setDateRanges([
-                new DateRange([
-                    'start_date' => sprintf('%ddaysAgo', $days),
-                    'end_date' => 'today',
-                ]),
+                $this->makeDateRange($days),
             ]);
 
         // Considera apenas eventos de interesse
@@ -183,10 +199,7 @@ class Ga4ApiService
                 new Metric(['name' => 'eventCount']),
             ])
             ->setDateRanges([
-                new DateRange([
-                    'start_date' => sprintf('%ddaysAgo', $days),
-                    'end_date' => 'today',
-                ]),
+                $this->makeDateRange($days),
             ]);
 
         // Filtra apenas títulos de página que contenham \"setActiveTab\"
@@ -247,10 +260,7 @@ class Ga4ApiService
                 new Metric(['name' => 'eventCount']),
             ])
             ->setDateRanges([
-                new DateRange([
-                    'start_date' => sprintf('%ddaysAgo', $days),
-                    'end_date' => 'today',
-                ]),
+                $this->makeDateRange($days),
             ]);
 
         // Mesmo filtro geral de profile + eventos de interesse
@@ -306,10 +316,7 @@ class Ga4ApiService
                 new Metric(['name' => 'eventCount']),
             ])
             ->setDateRanges([
-                new DateRange([
-                    'start_date' => sprintf('%ddaysAgo', $days),
-                    'end_date' => 'today',
-                ]),
+                $this->makeDateRange($days),
             ]);
 
         // Filtro: apenas perfis com "Cliente" e apenas eventos session_start

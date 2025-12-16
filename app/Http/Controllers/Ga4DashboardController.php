@@ -15,7 +15,8 @@ class Ga4DashboardController extends Controller
 
     public function index(): View
     {
-        $days = 28;
+        // Usar "ontem" como período padrão (1 dia)
+        $days = 1;
 
         $timeline = $this->ga4->customEventsTimeline($days);
         $summary = $this->ga4->customEventsSummary($days);
@@ -96,8 +97,10 @@ class Ga4DashboardController extends Controller
         $totalUsers = $summary->sum('total_users');
         $topEvent = $summary->first();
 
+        $periodLabel = $days === 1 ? 'Ontem' : "Últimos {$days} dias";
+
         return view('ga4.dashboard', [
-            'periodLabel' => "Últimos {$days} dias",
+            'periodLabel' => $periodLabel,
             'timeline' => $timeline,
             'summary' => $summary,
             'pages' => $pages,
