@@ -2,7 +2,7 @@
 <html lang="pt-BR">
     <head>
         <meta charset="utf-8">
-        <title>GA4 Dashboard - Eventos Customizados</title>
+        <title>Visão geral do engajamento</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -466,10 +466,10 @@
                                 <div class="eyebrow-dot"></div>
                                 <span>GA4 · Eventos Customizados</span>
                             </div>
-                            <h1 class="title">Visão de Engajamento GA4</h1>
+                            <h1 class="title">Visão geral do engajamento</h1>
                             <p class="subtitle">
-                                Painel focado em <strong>eventos customizados</strong> da propriedade GA4,
-                                com visão consolidada de volume, usuários e distribuição diária no período selecionado.
+                                Painel de <strong>engajamento</strong> da propriedade GA4,
+                                com métricas de visitas, logins, clientes e distribuição diária no período selecionado.
                             </p>
                         </div>
                         <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 10px;">
@@ -494,37 +494,54 @@
                         <span class="muted" style="font-size: 11px;">Visão geral do período</span>
                     </div>
                     @php
-                        $summaryByName = $summary->keyBy('event_name');
-                        $firstVisitEvents = (int) optional($summaryByName->get('first_visit'))['event_count'] ?? 0;
-                        $sessionStartEvents = (int) optional($summaryByName->get('session_start'))['event_count'] ?? 0;
-                        $totalClientes = collect($clients)->pluck('id')->filter()->unique()->count();
+                        $engagement = $engagementOverview ?? [
+                            'averageEngagementTime' => 0,
+                            'engagedSessionsPerUser' => 0,
+                            'averageEngagementTimePerSession' => 0,
+                        ];
+
+                        $formatSeconds = function (float $seconds): string {
+                            $seconds = (int) round($seconds);
+                            if ($seconds <= 0) {
+                                return '0s';
+                            }
+
+                            $minutes = intdiv($seconds, 60);
+                            $remain = $seconds % 60;
+
+                            if ($minutes === 0) {
+                                return sprintf('%ds', $remain);
+                            }
+
+                            return sprintf('%dm %02ds', $minutes, $remain);
+                        };
                     @endphp
                     <div class="kpis">
                         <div class="kpi">
-                            <div class="kpi-label">first_visit</div>
+                            <div class="kpi-label">Tempo médio de engajamento por usuário ativo</div>
                             <div class="kpi-value">
-                                {{ number_format($firstVisitEvents) }}
+                                {{ $formatSeconds($engagement['averageEngagementTime'] ?? 0) }}
                             </div>
                             <div class="kpi-meta">
-                                Eventos de primeira visita no período.
+                                Média de tempo de engajamento por usuário com atividade no período.
                             </div>
                         </div>
                         <div class="kpi">
-                            <div class="kpi-label">Clientes que acessaram</div>
+                            <div class="kpi-label">Sessões engajadas por usuário ativo</div>
                             <div class="kpi-value">
-                                {{ number_format($totalClientes) }}
+                                {{ number_format($engagement['engagedSessionsPerUser'] ?? 0, 2) }}
                             </div>
                             <div class="kpi-meta">
-                                Clientes distintos com atividade no período.
+                                Razão entre sessões engajadas e usuários ativos no período.
                             </div>
                         </div>
                         <div class="kpi">
-                            <div class="kpi-label">session_start (login)</div>
+                            <div class="kpi-label">Tempo médio de engajamento por sessão</div>
                             <div class="kpi-value">
-                                {{ number_format($sessionStartEvents) }}
+                                {{ $formatSeconds($engagement['averageEngagementTimePerSession'] ?? 0) }}
                             </div>
                             <div class="kpi-meta">
-                                Eventos de início de sessão (login) no período.
+                                Tempo médio de engajamento em cada sessão no período.
                             </div>
                         </div>
                     </div>
@@ -697,7 +714,7 @@
                         <tr>
                             <th>ID Cliente</th>
                             <th>Nome</th>
-                            <th>Logins (session_start)</th>
+                            <th>Page views (page_view)</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -705,7 +722,7 @@
                             <tr>
                                 <td>{{ $client['id'] }}</td>
                                 <td>{{ $client['name'] }}</td>
-                                <td>{{ number_format($client['session_start_events'] ?? 0) }}</td>
+                                <td>{{ number_format($client['page_view_events'] ?? 0) }}</td>
                             </tr>
                         @empty
                             <tr>

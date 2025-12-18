@@ -21,8 +21,9 @@ class Ga4DashboardController extends Controller
         $timeline = $this->ga4->customEventsTimeline($days);
         $summary = $this->ga4->customEventsSummary($days);
         $pages = $this->ga4->pageTitlesSummary($days);
+        $engagementOverview = $this->ga4->engagementOverview($days);
         $clientProfiles = $this->ga4->clientIdsFromProfile($days);
-        $sessionStartCounts = $this->ga4->sessionStartCountsByClient($days);
+        $pageViewCounts = $this->ga4->pageViewCountsByClient($days);
 
         $clientIds = collect($clientProfiles)->pluck('client_id')->unique()->values();
         $clients = [];
@@ -80,11 +81,11 @@ class Ga4DashboardController extends Controller
                     }
 
                     foreach ($rows as $row) {
-                        $sessionCount = (int) ($sessionStartCounts->get($id, 0));
+                        $pageViewCount = (int) ($pageViewCounts->get($id, 0));
                         $clients[] = [
                             'id' => $row[$idIndex] ?? null,
                             'name' => $row[$nameIndex] ?? null,
-                            'session_start_events' => $sessionCount,
+                            'page_view_events' => $pageViewCount,
                         ];
                     }
                 } catch (\Throwable $e) {
@@ -104,6 +105,7 @@ class Ga4DashboardController extends Controller
             'timeline' => $timeline,
             'summary' => $summary,
             'pages' => $pages,
+            'engagementOverview' => $engagementOverview,
             'clients' => $clients,
             'clientProfiles' => $clientProfiles,
             'totalEvents' => $totalEvents,

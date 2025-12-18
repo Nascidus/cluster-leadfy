@@ -125,6 +125,65 @@ class Ga4ApiService
     }
 
     /**
+     * Métricas agregadas de engajamento para o período.
+     *
+     * Calculamos:
+     * - averageEngagementTime            => tempo médio de engajamento por usuário ativo (userEngagementDuration / activeUsers)
+     * - engagedSessionsPerUser          => sessões engajadas por usuário ativo (métrica nativa)
+     * - averageEngagementTimePerSession => tempo médio de engajamento por sessão (userEngagementDuration / engagedSessions)
+     */
+    public function engagementOverview(int $days = 28): array
+    {
+        $request = (new RunReportRequest())
+            ->setProperty($this->propertyName())
+            ->setMetrics([
+                new Metric(['name' => 'userEngagementDuration']),
+                new Metric(['name' => 'engagedSessions']),
+                new Metric(['name' => 'activeUsers']),
+            ])
+            ->setDateRanges([
+                $this->makeDateRange($days),
+            ])
+            // Aplica o mesmo filtro geral de profile (apenas clientes)
+            ->setDimensionFilter($this->userProfileFilter());
+
+        $response = $this->client->runReport($request);
+        $rows = $response->getRows();
+
+        if (count($rows) === 0) {
+            return [
+                'averageEngagementTime' => 0.0,
+                'engagedSessionsPerUser' => 0.0,
+                'averageEngagementTimePerSession' => 0.0,
+            ];
+        }
+
+        $metrics = $rows[0]->getMetricValues();
+
+        $userEngagementDuration = (float) $metrics[0]->getValue(); // em segundos
+        $engagedSessions = (float) $metrics[1]->getValue();
+        $activeUsers = (float) $metrics[2]->getValue();
+
+        $averageEngagementTime = $activeUsers > 0
+            ? $userEngagementDuration / $activeUsers
+            : 0.0;
+
+        $averageEngagementTimePerSession = $engagedSessions > 0
+            ? $userEngagementDuration / $engagedSessions
+            : 0.0;
+
+        $engagedSessionsPerUser = $activeUsers > 0
+            ? $engagedSessions / $activeUsers
+            : 0.0;
+
+        return [
+            'averageEngagementTime' => $averageEngagementTime,
+            'engagedSessionsPerUser' => $engagedSessionsPerUser,
+            'averageEngagementTimePerSession' => $averageEngagementTimePerSession,
+        ];
+    }
+
+    /**
      * Retorna ranking de eventos (por nome) nos últimos N dias.
      */
     public function customEventsSummary(int $days = 28, int $limit = 10): Collection
@@ -142,25 +201,8 @@ class Ga4ApiService
                 $this->makeDateRange($days),
             ]);
 
-        // Considera apenas eventos de interesse
-        $eventFilter = (new Filter())
-            ->setFieldName('eventName')
-            ->setInListFilter(
-                (new InListFilter())
-                    ->setValues(['first_visit', 'page_view', 'session_start'])
-            );
-
-        // Combina filtro de evento com filtro geral de profile
-        $request->setDimensionFilter(
-            (new FilterExpression())
-                ->setAndGroup(
-                    (new FilterExpressionList())
-                        ->setExpressions([
-                            $this->userProfileFilter(),
-                            (new FilterExpression())->setFilter($eventFilter),
-                        ])
-                )
-        );
+        // Apenas filtro geral de profile (sem restringir o nome do evento)
+        $request->setDimensionFilter($this->userProfileFilter());
 
         $response = $this->client->runReport($request);
 
@@ -303,9 +345,9 @@ class Ga4ApiService
     }
 
     /**
-     * Retorna contagem de eventos session_start (login) por cliente (ID extraído do profile).
+     * Retorna contagem de eventos page_view por cliente (ID extraído do profile).
      */
-    public function sessionStartCountsByClient(int $days = 28): Collection
+    public function pageViewCountsByClient(int $days = 28): Collection
     {
         $request = (new RunReportRequest())
             ->setProperty($this->propertyName())
@@ -319,12 +361,12 @@ class Ga4ApiService
                 $this->makeDateRange($days),
             ]);
 
-        // Filtro: apenas perfis com "Cliente" e apenas eventos session_start
+        // Filtro: apenas perfis com "Cliente" e apenas eventos page_view
         $eventFilter = (new Filter())
             ->setFieldName('eventName')
             ->setInListFilter(
                 (new InListFilter())
-                    ->setValues(['session_start'])
+                    ->setValues(['page_view'])
             );
 
         $request->setDimensionFilter(
