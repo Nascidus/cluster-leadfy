@@ -704,35 +704,80 @@
                     </p>
                 </div>
             </div>
-            <div class="card" style="margin-top: 16px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                    <div class="badge">Clientes que acessaram</div>
-                    <span class="muted" style="font-size: 11px;">Derivado da dimensão de usuário profile (C7power:Cliente:ID)</span>
+            <div class="bottom-z-row" style="margin-top: 16px;">
+                <div style="display: flex; flex-direction: column; gap: 16px;">
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <div class="badge badge-accent">Total de clientes</div>
+                            <span class="muted" style="font-size: 11px;">Contagem de clientes únicos</span>
+                        </div>
+                        @php
+                            $totalClientes = collect($clients)->pluck('id')->filter()->unique()->count();
+                        @endphp
+                        <div style="display: flex; align-items: center; gap: 16px; padding: 20px 0;">
+                            <div style="font-size: 48px; font-weight: 700; letter-spacing: -0.04em; color: var(--text);">
+                                {{ number_format($totalClientes) }}
+                            </div>
+                            <div style="flex: 1;">
+                                <div style="font-size: 13px; color: var(--muted); margin-bottom: 4px;">
+                                    Clientes distintos com atividade no período
+                                </div>
+                                <div style="font-size: 11px; color: var(--muted);">
+                                    Baseado na dimensão de usuário <strong>profile</strong> (C7power:Cliente:ID)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <div class="badge badge-accent">Total de usuários</div>
+                            <span class="muted" style="font-size: 11px;">Usuários ativos no período</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 16px; padding: 20px 0;">
+                            <div style="font-size: 48px; font-weight: 700; letter-spacing: -0.04em; color: var(--text);">
+                                {{ number_format($totalUsers ?? 0) }}
+                            </div>
+                            <div style="flex: 1;">
+                                <div style="font-size: 13px; color: var(--muted); margin-bottom: 4px;">
+                                    Usuários ativos com atividade no período
+                                </div>
+                                <div style="font-size: 11px; color: var(--muted);">
+                                    Baseado na métrica <strong>activeUsers</strong> do GA4 (filtrado por profile contendo "Cliente")
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <table class="clients-table">
-                    <thead>
-                        <tr>
-                            <th>ID Cliente</th>
-                            <th>Nome</th>
-                            <th>Page views (page_view)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($clients as $client)
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <div class="badge">Clientes que acessaram</div>
+                        <span class="muted" style="font-size: 11px;">Derivado da dimensão de usuário profile (C7power:Cliente:ID)</span>
+                    </div>
+                    <table class="clients-table">
+                        <thead>
                             <tr>
-                                <td>{{ $client['id'] }}</td>
-                                <td>{{ $client['name'] }}</td>
-                                <td>{{ number_format($client['page_view_events'] ?? 0) }}</td>
+                                <th>ID Cliente</th>
+                                <th>Nome</th>
+                                <th>Page views (page_view)</th>
                             </tr>
-                        @empty
-                            <tr>
-                                <td colspan="3" class="muted">
-                                    Nenhum cliente identificado para o período selecionado.
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            @forelse($clients as $client)
+                                <tr>
+                                    <td>{{ $client['id'] }}</td>
+                                    <td>{{ $client['name'] }}</td>
+                                    <td>{{ number_format($client['page_view_events'] ?? 0) }}</td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="3" class="muted">
+                                        Nenhum cliente identificado para o período selecionado.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </body>

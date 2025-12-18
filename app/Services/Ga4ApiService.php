@@ -155,6 +155,7 @@ class Ga4ApiService
                 'averageEngagementTime' => 0.0,
                 'engagedSessionsPerUser' => 0.0,
                 'averageEngagementTimePerSession' => 0.0,
+                'activeUsers' => 0,
             ];
         }
 
@@ -180,6 +181,7 @@ class Ga4ApiService
             'averageEngagementTime' => $averageEngagementTime,
             'engagedSessionsPerUser' => $engagedSessionsPerUser,
             'averageEngagementTimePerSession' => $averageEngagementTimePerSession,
+            'activeUsers' => (int) $activeUsers,
         ];
     }
 

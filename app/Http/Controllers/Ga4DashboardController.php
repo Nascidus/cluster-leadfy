@@ -95,7 +95,7 @@ class Ga4DashboardController extends Controller
         }
 
         $totalEvents = $summary->sum('event_count');
-        $totalUsers = $summary->sum('total_users');
+        $totalUsers = $engagementOverview['activeUsers'] ?? 0;
         $topEvent = $summary->first();
 
         $periodLabel = $days === 1 ? 'Ontem' : "Últimos {$days} dias";
